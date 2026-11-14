@@ -1,0 +1,180 @@
+{
+  "observer_model": "Qwen/Qwen2.5-0.5B",
+  "performer_model": "Qwen/Qwen2.5-0.5B-Instruct",
+  "ai_threshold": 0.79614,
+  "human_threshold": 0.96103,
+  "platt_a": -25.81084,
+  "platt_b": 23.90463,
+  "info": {
+    "created": "2026-11-13",
+    "dataset": "eval.jsonl",
+    "target_fpr": 0.01,
+    "target_fnr": 0.05,
+    "metrics": {
+      "calib": {
+        "n_ai": 153,
+        "n_human": 147,
+        "auroc": 0.9342,
+        "tpr": 0.3007,
+        "fpr": 0.0068,
+        "human_recall": 0.7415,
+        "ai_called_human": 0.0458,
+        "uncertain": 0.4567
+      },
+      "test": {
+        "n_ai": 147,
+        "n_human": 153,
+        "auroc": 0.9374,
+        "tpr": 0.2925,
+        "fpr": 0.0196,
+        "human_recall": 0.7908,
+        "ai_called_human": 0.0816,
+        "uncertain": 0.4033
+      }
+    },
+    "test_by_domain": {
+      "finance": {
+        "auroc": 0.9141,
+        "tpr": 0.1515,
+        "fpr": 0.0,
+        "human_recall": 0.8333,
+        "ai_called_human": 0.1515,
+        "uncertain": 0.4444
+      },
+      "medicine": {
+        "auroc": 0.9648,
+        "tpr": 0.1923,
+        "fpr": 0.0,
+        "human_recall": 0.8286,
+        "ai_called_human": 0.1154,
+        "uncertain": 0.3934
+      },
+      "open_qa": {
+        "auroc": 0.8975,
+        "tpr": 0.5806,
+        "fpr": 0.1071,
+        "human_recall": 0.6429,
+        "ai_called_human": 0.0323,
+        "uncertain": 0.322
+      },
+      "reddit_eli5": {
+        "auroc": 0.9901,
+        "tpr": 0.2778,
+        "fpr": 0.0,
+        "human_recall": 0.9355,
+        "ai_called_human": 0.0556,
+        "uncertain": 0.3881
+      },
+      "wiki_csai": {
+        "auroc": 0.9573,
+        "tpr": 0.2381,
+        "fpr": 0.0,
+        "human_recall": 0.6897,
+        "ai_called_human": 0.0476,
+        "uncertain": 0.48
+      }
+    }
+  },
+  "sentences": {
+    "window_tokens": 96,
+    "ai_threshold": 0.83136,
+    "human_threshold": 0.99758,
+    "mixed_min_run_words": 76,
+    "info": {
+      "dataset": "eval.jsonl + mixed.jsonl",
+      "target_fpr": 0.02,
+      "target_fnr": 0.1,
+      "mixed_fpr": 0.02,
+      "metrics": {
+        "window_tokens": {
+          "0": {
+            "mixed_auroc": 0.7511,
+            "pure_auroc": 0.7193
+          },
+          "32": {
+            "mixed_auroc": 0.7798,
+            "pure_auroc": 0.7854
+          },
+          "64": {
+            "mixed_auroc": 0.8008,
+            "pure_auroc": 0.8225
+          },
+          "96": {
+            "mixed_auroc": 0.8191,
+            "pure_auroc": 0.8573
+          },
+          "128": {
+            "mixed_auroc": 0.8088,
+            "pure_auroc": 0.8714
+          }
+        },
+        "calib": {
+          "docs_human": {
+            "likely_human": 0.7347,
+            "uncertain": 0.2449,
+            "mixed": 0.0068,
+            "likely_ai": 0.0136,
+            "n": 147
+          },
+          "docs_ai": {
+            "likely_human": 0.0392,
+            "uncertain": 0.3725,
+            "mixed": 0.2876,
+            "likely_ai": 0.3007,
+            "n": 153
+          },
+          "docs_mixed": {
+            "likely_human": 0.3409,
+            "uncertain": 0.3409,
+            "mixed": 0.2727,
+            "likely_ai": 0.0455,
+            "n": 44
+          },
+          "sentences_pure": {
+            "human_words_flagged_ai": 0.0212,
+            "ai_words_flagged_ai": 0.4728
+          },
+          "sentences_mixed": {
+            "human_words_flagged_ai": 0.0171,
+            "ai_words_flagged_ai": 0.3454
+          },
+          "sentence_auroc_mixed": 0.8191,
+          "sentence_auroc_mixed_unsmoothed": 0.7511
+        },
+        "test": {
+          "docs_human": {
+            "likely_human": 0.7908,
+            "uncertain": 0.1895,
+            "mixed": 0.0,
+            "likely_ai": 0.0196,
+            "n": 153
+          },
+          "docs_ai": {
+            "likely_human": 0.068,
+            "uncertain": 0.3673,
+            "mixed": 0.2721,
+            "likely_ai": 0.2925,
+            "n": 147
+          },
+          "docs_mixed": {
+            "likely_human": 0.3393,
+            "uncertain": 0.2321,
+            "mixed": 0.3929,
+            "likely_ai": 0.0357,
+            "n": 56
+          },
+          "sentences_pure": {
+            "human_words_flagged_ai": 0.0314,
+            "ai_words_flagged_ai": 0.4654
+          },
+          "sentences_mixed": {
+            "human_words_flagged_ai": 0.0504,
+            "ai_words_flagged_ai": 0.3876
+          },
+          "sentence_auroc_mixed": 0.8054,
+          "sentence_auroc_mixed_unsmoothed": 0.7825
+        }
+      }
+    }
+  }
+}

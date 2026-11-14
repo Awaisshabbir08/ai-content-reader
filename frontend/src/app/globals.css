@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+/* Colour tokens. The AI / uncertain / human scale is diverging (red, grey midpoint, blue),
+   validated for colour-vision deficiencies in both modes; every use also carries a text
+   label or legend, so colour is never the only signal. */
+:root {
+  --background: #f7f7f8;
+  --surface: #ffffff;
+  --subtle: #f4f4f5;
+  --foreground: #18181b;
+  --muted: #6b6b73;
+  --border: #e4e4e7;
+
+  --ai: #e34948;
+  --ai-soft: rgba(227, 73, 72, 0.16);
+  --ai-track: #f9d4d3;
+  --unsure: #a3a29c;
+  --unsure-soft: rgba(163, 162, 156, 0.24);
+  --unsure-track: #e9e8e4;
+  --human: #2a78d6;
+  --human-soft: rgba(42, 120, 214, 0.13);
+  --human-track: #cde2fb;
+  --mixed: #eb6834;
+  --mixed-track: #fbdccd;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-subtle: var(--subtle);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-border: var(--border);
+  --color-ai: var(--ai);
+  --color-ai-soft: var(--ai-soft);
+  --color-ai-track: var(--ai-track);
+  --color-unsure: var(--unsure);
+  --color-unsure-soft: var(--unsure-soft);
+  --color-unsure-track: var(--unsure-track);
+  --color-human: var(--human);
+  --color-human-soft: var(--human-soft);
+  --color-human-track: var(--human-track);
+  --color-mixed: var(--mixed);
+  --color-mixed-track: var(--mixed-track);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: ui-monospace, "Cascadia Code", "SFMono-Regular", Consolas, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0c0c0e;
+    --surface: #17171a;
+    --subtle: #222226;
+    --foreground: #ededef;
+    --muted: #a1a1aa;
+    --border: #2a2a2e;
+
+    --ai: #e66767;
+    --ai-soft: rgba(230, 103, 103, 0.28);
+    --ai-track: #4a2626;
+    --unsure: #5f5e5a;
+    --unsure-soft: rgba(160, 160, 155, 0.2);
+    --unsure-track: #2f2f2c;
+    --human: #3987e5;
+    --human-soft: rgba(57, 135, 229, 0.22);
+    --human-track: #1b3354;
+    --mixed: #d95926;
+    --mixed-track: #4a2a1a;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+}
+
+/* A sentence picked from the chart flashes briefly in the text. */
+@keyframes flash {
+  0%,
+  60% {
+    outline: 2px solid var(--foreground);
+    outline-offset: 2px;
+  }
+  100% {
+    outline: 2px solid transparent;
+    outline-offset: 2px;
+  }
+}
+.flash {
+  animation: flash 1.6s ease-out;
+  border-radius: 2px;
+}
+
+/* PDF report ("Download PDF report" prints the visible result): always light, keep highlight colours. */
+@media print {
+  :root {
+    --background: #ffffff;
+    --surface: #ffffff;
+    --subtle: #f4f4f5;
+    --foreground: #18181b;
+    --muted: #52525b;
+    --border: #d4d4d8;
+    --ai: #e34948;
+    --ai-soft: rgba(227, 73, 72, 0.16);
+    --ai-track: #f9d4d3;
+    --unsure: #a3a29c;
+    --unsure-soft: rgba(163, 162, 156, 0.24);
+    --unsure-track: #e9e8e4;
+    --human: #2a78d6;
+    --human-soft: rgba(42, 120, 214, 0.13);
+    --human-track: #cde2fb;
+    --mixed: #eb6834;
+    --mixed-track: #fbdccd;
+  }
+  * {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

@@ -1,0 +1,42 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: detector
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-detector}
+      POSTGRES_DB: detector
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U detector -d detector"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg://detector:${POSTGRES_PASSWORD:-detector}@db:5432/detector
+      OBSERVER_MODEL: ${OBSERVER_MODEL:-Qwen/Qwen2.5-0.5B}
+      PERFORMER_MODEL: ${PERFORMER_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
+      STORE_TEXT: ${STORE_TEXT:-false}
+    volumes:
+      - hf-cache:/models # downloaded models survive restarts
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+
+  web:
+    build: ./frontend
+    environment:
+      API_URL: http://api:8000
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
+  hf-cache:

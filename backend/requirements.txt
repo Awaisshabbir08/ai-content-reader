@@ -1,0 +1,12 @@
+# Install torch first (CPU build in Docker, see Dockerfile), then:
+transformers>=4.56,<6
+fastapi>=0.115,<1
+uvicorn[standard]>=0.30,<1
+pydantic>=2.8,<3
+pydantic-settings>=2.4,<3
+sqlalchemy>=2.0.30,<3
+psycopg[binary]>=3.2,<4
+numpy>=1.26
+python-multipart>=0.0.9  # file uploads
+pypdf>=5,<8  # PDF text (BSD licence; PyMuPDF is AGPL)
+python-docx>=1.1,<2
