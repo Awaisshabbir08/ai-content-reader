@@ -1,8 +1,10 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
 import SentenceChart, { LABEL_NAME } from "@/components/SentenceChart";
 import { Button, Card, CopyButton } from "@/components/ui";
+import { setDraftText } from "@/lib/store";
 import { countWords, RELIABLE_WORDS, type DetectResult, type DocLabel, type SentenceLabel } from "@/lib/types";
 
 export const DOC_LABELS: Record<
@@ -106,6 +108,7 @@ function downloadJson(result: DetectResult) {
 }
 
 export default function Result({ result, text, title }: { result: DetectResult; text: string; title?: string }) {
+  const router = useRouter();
   const [show, setShow] = useState<Record<"likely_ai" | "uncertain" | "likely_human", boolean>>({
     likely_ai: true,
     uncertain: true,
@@ -231,6 +234,16 @@ export default function Result({ result, text, title }: { result: DetectResult; 
           </Button>
           <CopyButton label="Copy summary" getText={() => summaryText(result, title)} />
           <Button onClick={() => downloadJson(result)}>Export JSON</Button>
+          {result.label !== "likely_human" && (
+            <Button
+              onClick={() => {
+                setDraftText(text);
+                router.push("/humanizer");
+              }}
+            >
+              Humanize this text
+            </Button>
+          )}
         </div>
       </Card>
 

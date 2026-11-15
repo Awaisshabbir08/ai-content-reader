@@ -4,6 +4,8 @@ import {
   type DetectorInfo,
   type DetectResult,
   type ExtractResult,
+  type HumanizeResult,
+  type HumanizeTone,
   type JobStatus,
 } from "@/lib/types";
 
@@ -20,6 +22,16 @@ export async function extractFile(file: File): Promise<ExtractResult> {
 
 export async function fetchInfo(): Promise<DetectorInfo> {
   return request<DetectorInfo>("/api/info", { method: "GET" });
+}
+
+/** Rewrite a text with the Claude API (through the backend). Takes seconds to a minute. */
+export async function humanizeText(text: string, tone: HumanizeTone, signal?: AbortSignal): Promise<HumanizeResult> {
+  return request<HumanizeResult>("/api/humanize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ text, tone }),
+    signal,
+  });
 }
 
 export interface JobUpdate {

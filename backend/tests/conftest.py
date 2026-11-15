@@ -26,6 +26,8 @@ os.environ.update(
     DATABASE_URL=f"sqlite:///{(_TMP / 'test.db').as_posix()}",
     CALIBRATION_FILE=str(_CALIBRATION),
     STORE_TEXT="false",
+    HUMANIZER_ENGINE="off",  # tests never call Ollama or the Claude API; they inject fakes
+    ANTHROPIC_API_KEY="",
 )
 
 from app.detector.binoculars import TokenScores  # noqa: E402

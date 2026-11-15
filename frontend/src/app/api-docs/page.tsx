@@ -9,7 +9,12 @@ const ENDPOINTS: { method: string; path: string; what: string }[] = [
   { method: "GET", path: "/api/v1/jobs/{id}", what: "Job status, progress (0–1), queue position and, when done, the result." },
   { method: "POST", path: "/api/v1/extract", what: "Extract plain text from a .txt, .docx or .pdf upload (multipart, field “file”)." },
   { method: "GET", path: "/api/v1/scans/{id}", what: "Fetch an earlier result by scan id (scores only; text isn’t stored)." },
-  { method: "GET", path: "/api/v1/info", what: "Detector, limits, thresholds and calibration accuracy." },
+  {
+    method: "POST",
+    path: "/api/v1/humanize",
+    what: "Rewrite a text so it reads naturally ({text, tone}; tone: natural, casual, professional or academic). Uses a free local model by default, or the Claude API if configured.",
+  },
+  { method: "GET", path: "/api/v1/info", what: "Detector, limits, thresholds, calibration accuracy and whether the humanizer is set up." },
   { method: "GET", path: "/health", what: "Liveness check; says whether the model is loaded." },
 ];
 

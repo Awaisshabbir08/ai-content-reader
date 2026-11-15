@@ -87,6 +87,41 @@ export function CopyButton({
   );
 }
 
+/** A row of mutually exclusive options (radio buttons styled as a segmented control). */
+export function Segmented<T extends string>({
+  label,
+  value,
+  onChange,
+  options,
+  disabled,
+}: {
+  label: string;
+  value: T;
+  onChange: (v: T) => void;
+  options: { id: T; label: string }[];
+  disabled?: boolean;
+}) {
+  return (
+    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-border p-0.5">
+      {options.map((o) => (
+        <button
+          key={o.id}
+          type="button"
+          role="radio"
+          aria-checked={value === o.id}
+          disabled={disabled}
+          onClick={() => onChange(o.id)}
+          className={`rounded-md px-2.5 py-1 text-xs font-medium disabled:cursor-not-allowed disabled:opacity-60 ${
+            value === o.id ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "text-muted hover:text-foreground"
+          }`}
+        >
+          {o.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 /** Small stat tile: a label and a value, with an optional hint underneath. */
 export function Stat({ label, value, hint }: { label: string; value: ReactNode; hint?: ReactNode }) {
   return (

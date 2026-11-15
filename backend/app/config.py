@@ -7,9 +7,10 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 
 
 class Settings(BaseSettings):
-    """All settings can be overridden with environment variables (or a .env file)."""
+    """All settings can be overridden with environment variables or a .env file: the one in the
+    project root (shared with docker compose) or one in the working directory."""
 
-    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
+    model_config = SettingsConfigDict(env_file=(BACKEND_DIR.parent / ".env", ".env"), extra="ignore")
 
     # Binoculars model pair. Both models must share one tokenizer.
     # Small pair = runs on CPU. On a GPU server, try Qwen/Qwen2.5-7B + Qwen/Qwen2.5-7B-Instruct
@@ -34,6 +35,21 @@ class Settings(BaseSettings):
     store_text: bool = False  # privacy default: keep scores, not the submitted text
 
     cors_origins: list[str] = ["http://localhost:3000"]
+
+    # Humanizer engine: local (free model run by Ollama on this machine) | claude (paid API; the
+    # text is sent to Anthropic) | off.
+    humanizer_engine: str = "local"
+    humanizer_max_words: int = 0  # 0 = engine default: 1,000 words local, 2,000 Claude
+    humanizer_timeout_s: float = 600
+    # Local engine
+    ollama_url: str = "http://localhost:11434"
+    # Apache-2.0, about 3 GB of memory. Use an "instruct" model: plain "qwen3:4b" is a reasoning model
+    # that writes a long hidden monologue before every answer, which is several times slower.
+    humanizer_local_model: str = "qwen3:4b-instruct"
+    # Claude engine
+    anthropic_api_key: str = ""
+    humanizer_model: str = "claude-opus-5-5"
+    humanizer_effort: str = "medium"  # low | medium | high: lower is faster and cheaper
 
 
 @lru_cache

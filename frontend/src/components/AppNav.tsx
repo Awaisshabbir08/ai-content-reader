@@ -15,6 +15,7 @@ export const NAV: { section: string; items: NavItem[] }[] = [
     section: "Detect",
     items: [
       { href: "/", label: "AI Detector", icon: "◎" },
+      { href: "/humanizer", label: "AI Humanizer", icon: "✎" },
       { href: "/batch", label: "Batch files", icon: "▤" },
       { href: "/history", label: "History", icon: "↺" },
     ],
@@ -95,7 +96,8 @@ export default function AppNav() {
           ))}
         </nav>
         <p className="px-2 text-[11px] leading-relaxed text-muted">
-          Runs on your own server. Texts are not stored; history stays in this browser.
+          Runs on your own server (the humanizer can optionally use the Claude API). Texts are not stored; history
+          stays in this browser.
         </p>
       </aside>
 

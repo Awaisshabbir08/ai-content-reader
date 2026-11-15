@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button, Card, CopyButton, EmptyHint, TextBox } from "@/components/ui";
+import { Button, Card, CopyButton, EmptyHint, Segmented, TextBox } from "@/components/ui";
 import { draft, setDraftText, useStore } from "@/lib/store";
 import { summarize } from "@/lib/summarize";
 import { words } from "@/lib/text-stats";
@@ -139,37 +139,6 @@ export default function Summarizer() {
           summary never adds anything that isn’t in your text. Runs entirely in your browser.
         </p>
       </Card>
-    </div>
-  );
-}
-
-function Segmented<T extends string>({
-  label,
-  value,
-  onChange,
-  options,
-}: {
-  label: string;
-  value: T;
-  onChange: (v: T) => void;
-  options: { id: T; label: string }[];
-}) {
-  return (
-    <div role="radiogroup" aria-label={label} className="inline-flex rounded-lg border border-border p-0.5">
-      {options.map((o) => (
-        <button
-          key={o.id}
-          type="button"
-          role="radio"
-          aria-checked={value === o.id}
-          onClick={() => onChange(o.id)}
-          className={`rounded-md px-2.5 py-1 text-xs font-medium ${
-            value === o.id ? "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-900" : "text-muted hover:text-foreground"
-          }`}
-        >
-          {o.label}
-        </button>
-      ))}
     </div>
   );
 }

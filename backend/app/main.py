@@ -15,12 +15,17 @@ from .detector.analyzer import Progress, TextTooShortError, TokenScorer, analyze
 from .detector.calibration import Calibration
 from .detector.text_utils import count_words
 from .extract import ExtractionError, UnsupportedFileError, extract_text
+from .humanizer import MIN_WORDS as HUMANIZE_MIN_WORDS
+from .humanizer import TONES, Humanizer, HumanizerError, build_humanizer
 from .jobs import Job, JobManager, QueueFullError
 from .schemas import (
     DetectorInfo,
     DetectRequest,
     DetectResponse,
     ExtractResponse,
+    HumanizeRequest,
+    HumanizeResponse,
+    HumanizerInfo,
     InfoResponse,
     JobResponse,
     Sentence,
@@ -54,6 +59,9 @@ async def lifespan(app: FastAPI):
             window_tokens=settings.window_tokens,
         )
         log.info("Detector ready on %s", app.state.detector.device)
+    app.state.humanizer, app.state.humanizer_problem = build_humanizer(settings)
+    if app.state.humanizer is not None:
+        log.info("Humanizer engine: %s (%s)", app.state.humanizer.engine, app.state.humanizer.model)
     yield
     app.state.jobs.shutdown()
     engine.dispose()
@@ -84,6 +92,13 @@ def get_calibration(request: Request) -> Calibration:
     return request.app.state.calibration
 
 
+def get_humanizer(request: Request) -> Humanizer:
+    humanizer = request.app.state.humanizer
+    if humanizer is None:
+        raise HTTPException(503, request.app.state.humanizer_problem or "The humanizer is not set up.")
+    return humanizer
+
+
 @app.get("/health")
 def health(request: Request) -> dict:
     detector = request.app.state.detector
@@ -103,6 +118,8 @@ def info(
 ) -> InfoResponse:
     """Detector, limits and the accuracy measured during calibration."""
     detector = request.app.state.detector
+    humanizer: Humanizer | None = request.app.state.humanizer
+    humanizer_problem = humanizer.problem() if humanizer else request.app.state.humanizer_problem
     return InfoResponse(
         detector=getattr(detector, "name", None),
         model_loaded=detector is not None,
@@ -115,6 +132,40 @@ def info(
         max_tokens=settings.max_tokens,
         max_upload_mb=settings.max_upload_mb,
         calibration={"document": calibration.info, "sentences": calibration.sentence_info},
+        humanizer=HumanizerInfo(
+            enabled=humanizer is not None and humanizer_problem is None,
+            engine=humanizer.engine if humanizer else settings.humanizer_engine,
+            model=humanizer.model if humanizer else None,
+            problem=humanizer_problem,
+            min_words=HUMANIZE_MIN_WORDS,
+            max_words=humanizer.max_words if humanizer else (settings.humanizer_max_words or 1000),
+            tones=list(TONES),
+        ),
+    )
+
+
+@app.post("/api/v1/humanize", response_model=HumanizeResponse)
+def humanize(
+    body: HumanizeRequest,
+    settings: Settings = Depends(get_settings),
+    humanizer: Humanizer = Depends(get_humanizer),
+) -> HumanizeResponse:
+    """Rewrite a text so it reads more naturally. The local engine (default) runs a free model on
+    this server; the Claude engine sends the text to Anthropic. Takes seconds to a few minutes."""
+    _check_length(body.text, settings)
+    words = count_words(body.text)
+    if words < HUMANIZE_MIN_WORDS:
+        raise HTTPException(422, f"Text has {words} words; at least {HUMANIZE_MIN_WORDS} are needed.")
+    if words > humanizer.max_words:
+        raise HTTPException(
+            413, f"Text has {words:,} words; the humanizer takes up to {humanizer.max_words:,} at a time."
+        )
+    try:
+        rewrite = humanizer.rewrite(body.text, body.tone)
+    except HumanizerError as exc:
+        raise HTTPException(exc.status, str(exc)) from exc
+    return HumanizeResponse(
+        text=rewrite.text, tone=body.tone, model=rewrite.model, word_count=count_words(rewrite.text)
     )
 
 

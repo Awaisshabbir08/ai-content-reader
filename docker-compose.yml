@@ -20,6 +20,14 @@ services:
       OBSERVER_MODEL: ${OBSERVER_MODEL:-Qwen/Qwen2.5-0.5B}
       PERFORMER_MODEL: ${PERFORMER_MODEL:-Qwen/Qwen2.5-0.5B-Instruct}
       STORE_TEXT: ${STORE_TEXT:-false}
+      HUMANIZER_ENGINE: ${HUMANIZER_ENGINE:-local}
+      HUMANIZER_LOCAL_MODEL: ${HUMANIZER_LOCAL_MODEL:-qwen3:4b-instruct}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434} # Ollama running on the host
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      HUMANIZER_MODEL: ${HUMANIZER_MODEL:-claude-opus-5-5}
+      HUMANIZER_EFFORT: ${HUMANIZER_EFFORT:-medium}
+    extra_hosts:
+      - "host.docker.internal:host-gateway" # lets Linux hosts resolve it too
     volumes:
       - hf-cache:/models # downloaded models survive restarts
     ports:

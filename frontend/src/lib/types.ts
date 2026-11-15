@@ -71,6 +71,7 @@ export interface DetectorInfo {
   max_chars: number;
   max_tokens: number;
   max_upload_mb: number;
+  humanizer?: HumanizerInfo; // missing on an older backend
   calibration: {
     document: {
       created?: string;
@@ -91,6 +92,25 @@ export interface DetectorInfo {
       };
     };
   };
+}
+
+export type HumanizeTone = "natural" | "casual" | "professional" | "academic";
+
+export interface HumanizerInfo {
+  enabled: boolean; // true when the engine is ready to rewrite
+  engine: string; // "local" (free model via Ollama), "claude" (paid API) or "off"
+  model: string | null;
+  problem: string | null; // why it isn't ready, in plain words
+  min_words: number;
+  max_words: number;
+  tones: HumanizeTone[];
+}
+
+export interface HumanizeResult {
+  text: string;
+  tone: HumanizeTone;
+  model: string;
+  word_count: number;
 }
 
 export interface VerdictShares {

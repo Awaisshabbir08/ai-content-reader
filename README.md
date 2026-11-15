@@ -1,8 +1,9 @@
 # AI Content Detector
 
 Estimates whether a text was written by AI, gives an overall verdict with a probability, and highlights
-AI-like sentences. Everything runs on your own infrastructure with open-source models — no paid
-third-party service.
+AI-like sentences. It runs on your own infrastructure with open-source models — no paid third-party
+service. The AI humanizer uses a free local model by default, and can optionally use the Claude API
+instead (better rewrites, paid per use, and the text is sent to Anthropic).
 
 **Status:** Phase 1 MVP plus a web workspace: English text, pasted or uploaded (TXT, DOCX, PDF),
 zero-shot engine, a "Mixed" verdict for partly AI-written documents, and writing tools.
@@ -20,6 +21,15 @@ zero-shot engine, a "Mixed" verdict for partly AI-written documents, and writing
   (localStorage).
 - **Reports**: "Download PDF report" (print to PDF), copy a text summary, or export the raw JSON.
 
+**AI humanizer** (free local model by default; Claude API optional)
+
+- Rewrites AI-sounding text so it reads naturally, in a Natural, Casual, Professional or Academic tone,
+  keeping facts, names, numbers and structure. Up to 1,000 words per rewrite with the local model, 2,000
+  with Claude.
+- Checks the original and the rewrite with the detector and shows the scores side by side; "See sentence
+  highlights" opens the rewrite's full report. Detection results also have a "Humanize this text" button.
+- Needs Ollama and a model on the same machine, or a Claude API key (see [Humanizer setup](#humanizer-setup)).
+
 **Writing tools** (run entirely in the browser; the text never leaves the device)
 
 - **Word counter**: words, characters, sentences, paragraphs, reading and speaking time, keyword
@@ -36,9 +46,8 @@ The text you type is shared between the detector and the writing tools, so you p
 **How it works** shows the measured accuracy (read live from `/api/v1/info`), and **API** documents the
 endpoints.
 
-Not included on purpose: an "AI humanizer" (its only purpose is to defeat detectors like this one), and
-tools that need a text-generation model (paraphraser, grammar correction, translation). Those would need
-either a much larger local model (GPU) or an external LLM API, which sends user text to a third party.
+Not included yet: other tools that need a text-generation model (paraphraser, grammar correction,
+translation). They could reuse the humanizer's model setup.
 
 ## How it works
 
@@ -78,8 +87,9 @@ re-run calibration.
 
 ```
 backend/            FastAPI + PyTorch/Transformers
-  app/main.py         API: detect, jobs, extract, scans, info, health
+  app/main.py         API: detect, jobs, extract, scans, humanize, info, health
   app/jobs.py         background analysis jobs (one worker thread, in-memory queue)
+  app/humanizer.py    rewrites text: local engine (Ollama) or Claude engine, shared prompt and tones
   app/extract.py      text from uploaded TXT / DOCX / PDF files (in memory, never stored)
   app/detector/       binoculars.py (engine), analyzer.py (doc + sentence results),
                       calibration.py (thresholds), metrics.py (AUROC, FPR...), text_utils.py
@@ -88,9 +98,9 @@ backend/            FastAPI + PyTorch/Transformers
   calibration.json    thresholds for the default model pair
   tests/              pytest (no model download needed)
 frontend/           Next.js 16 + Tailwind
-  src/app/            pages (/, /batch, /history, /word-counter, /readability, /summarizer,
+  src/app/            pages (/, /humanizer, /batch, /history, /word-counter, /readability, /summarizer,
                       /citation-generator, /how-it-works, /api-docs); src/app/api/* proxy to the backend
-  src/components/     Detector, Result, SentenceChart, Batch, History and the writing tools
+  src/components/     Detector, Result, SentenceChart, Humanizer, Batch, History and the writing tools
   src/lib/            api client (job polling), stores, text-stats, style-check, summarize, citation
 docker-compose.yml  db (Postgres 16) + api + web
 ```
@@ -128,6 +138,46 @@ cd frontend
 npm install
 npm run dev                        # http://localhost:3000, expects the API on :8000 (override with API_URL)
 ```
+
+### Humanizer setup
+
+Settings go in the `.env` file in the project root (create it from `.env.example`). Both the local
+backend and docker compose read that file. Never commit `.env`; it is in `.gitignore`.
+`GET /api/v1/info` reports whether the humanizer is ready, and if not, why.
+
+**Local engine (default, free).** A free open-source model runs on the same machine through
+[Ollama](https://ollama.com). The text never leaves the machine and there is no per-use cost; rewrites
+are slower and weaker than Claude's.
+
+1. Install Ollama (Windows: `winget install Ollama.Ollama`; Linux: see ollama.com). It runs in the
+   background and starts with the computer.
+2. Download the model: `ollama pull qwen3:4b-instruct` (about 2.5 GB, Apache-2.0 licence, needs about
+   3 GB of memory while it works; Ollama unloads it after 5 idle minutes). Use an *instruct* model: plain
+   `qwen3:4b` is a reasoning model that writes a long hidden monologue first and is several times slower.
+3. That's it: `HUMANIZER_ENGINE=local` is the default.
+
+Optional: `HUMANIZER_LOCAL_MODEL` (any Ollama instruct model, e.g. a larger one on a 16 GB server: better,
+but more memory and time), `OLLAMA_URL` (default `http://localhost:11434`), `HUMANIZER_MAX_WORDS` (default 1,000 for the local
+engine; on a CPU, the local model takes about a minute per 300 words).
+
+**Claude engine (optional, paid).** Better rewrites in seconds, but the text is sent to Anthropic.
+
+1. Create an API key at https://console.anthropic.com and add prepaid credit (pay per use; no free tier).
+2. In `.env`:
+
+   ```
+   HUMANIZER_ENGINE=claude
+   ANTHROPIC_API_KEY=sk-ant-...
+   ```
+3. Restart the backend.
+
+Optional: `HUMANIZER_MODEL` (default `claude-opus-5-5`, the best quality; `claude-haiku-5-5` is much
+cheaper), `HUMANIZER_EFFORT` (`low` / `medium` / `high`; lower is faster and cheaper), `HUMANIZER_MAX_WORDS`
+(default 2,000 for Claude). A 500-word rewrite costs roughly 2–3 US cents with Claude Opus 5.5 and under 0.1
+cent with Claude Haiku 5.5. When a model declines a request, the API retries it on a fallback model
+(server-side fallback, not available for Haiku).
+
+`HUMANIZER_ENGINE=off` switches the humanizer off; the page then says so.
 
 ## API
 
@@ -167,8 +217,22 @@ need OCR, which isn't supported yet (422).
 curl -F "file=@essay.pdf" http://localhost:8000/api/v1/extract
 ```
 
+**Humanizer:** `POST /api/v1/humanize` with `{"text": "…at least 20 words…", "tone": "natural"}` (tone:
+`natural`, `casual`, `professional` or `academic`) returns `{"text", "tone", "model", "word_count"}`. It
+waits for the rewrite: seconds with Claude, about a minute per 300 words with the local model on a CPU.
+Errors: 503 if the engine isn't ready (Ollama not running, model not downloaded, no API key), 422 if the
+text is too short or Claude declines it, 413 if it is over the word limit, 429 when rate-limited, 502/504
+for model problems.
+
+```bash
+curl -X POST http://localhost:8000/api/v1/humanize -H "Content-Type: application/json" \
+     -d '{"text": "…", "tone": "professional"}'
+```
+
 **Privacy:** by default the database stores scores, labels and a SHA-256 of the text, **not the text
-itself**. Set `STORE_TEXT=true` to keep it.
+itself**. Set `STORE_TEXT=true` to keep it. Detection never sends text anywhere, and neither does the
+humanizer's default local engine. The Claude engine sends the text to Anthropic to rewrite it. Rewrites
+are not stored.
 
 ## Calibration and evaluation
 

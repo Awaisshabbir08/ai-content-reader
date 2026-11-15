@@ -85,6 +85,31 @@ class JobResponse(BaseModel):
     error_status: int | None = Field(None, description="HTTP status the same error would have on /detect.")
 
 
+Tone = Literal["natural", "casual", "professional", "academic"]
+
+
+class HumanizeRequest(BaseModel):
+    text: str = Field(min_length=1)
+    tone: Tone = "natural"
+
+
+class HumanizeResponse(BaseModel):
+    text: str
+    tone: Tone
+    model: str = Field(description="Model that wrote the rewrite.")
+    word_count: int
+
+
+class HumanizerInfo(BaseModel):
+    enabled: bool = Field(description="True when the engine is ready to rewrite.")
+    engine: str = Field(description="local (free model via Ollama), claude (paid API) or off.")
+    model: str | None
+    problem: str | None = Field(description="Why the humanizer isn't ready, in plain words.")
+    min_words: int
+    max_words: int
+    tones: list[Tone]
+
+
 class InfoResponse(BaseModel):
     detector: str | None
     model_loaded: bool
@@ -97,3 +122,4 @@ class InfoResponse(BaseModel):
     max_tokens: int
     max_upload_mb: int
     calibration: dict = Field(description="Dataset and accuracy figures from calibration.json.")
+    humanizer: HumanizerInfo
